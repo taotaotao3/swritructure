@@ -16,8 +16,7 @@ Result:exporting swritructure.txt
 
 --swritructure.txt---
 
-WebScrape.py
-
+ aaaaaa.py
      |
 
     ∟createData.py
