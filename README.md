@@ -7,8 +7,6 @@ License:MIT
 Using method:  
 pip install swritructure
 
->python swritructure.py (target program start file name)
-
 ex:
 import swritructure as sw
 
