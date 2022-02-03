@@ -10,9 +10,14 @@ pip install swritructure
 >python swritructure.py (target program start file name)
 
 ex:
->python swritructure.py aaaaaa.py
+import swritructure as sw
+
+sw.swritructure_main('your_program.py')
+
 
 Result:exporting swritructure.txt
+
+
 
 --swritructure.txt---
 
