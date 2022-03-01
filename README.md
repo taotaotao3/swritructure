@@ -4,15 +4,20 @@ Name:swritructure
 Explanation:Please use it when you want to know target program structure.
 
 License:MIT
-Using method:  
-pip install swritructure
+
 
 
 # How to use
 How to use simply is the following.
 
->python swritructure.py <your top main file name>
+>python swritructure.py "your top main file name"
 
+ex) python swritrucure.py yourfilename.py
+
+ or
+ 
+Using method:  
+pip install swritructure
 
 # Export file1
  
