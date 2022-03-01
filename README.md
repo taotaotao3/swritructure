@@ -7,17 +7,16 @@ License:MIT
 Using method:  
 pip install swritructure
 
-ex:
-import swritructure as sw
 
-sw.swritructure_main('your_program.py')
+# How to use
+How to use simply is the following.
 
-
-Result:exporting swritructure.txt
+>python swritructure.py <your top main file name>
 
 
-
---swritructure.txt---
+# Export file1
+ 
+--swritructure_bone.txt---
 
  aaaaaa.py
      |
@@ -51,3 +50,8 @@ Result:exporting swritructure.txt
     |    |  　|          |
 
     |    |    |          checkTorihikiginkou()
+
+ Export file2
+ 
+ ---structure.xlsx----
+ sourcecode copy paste
