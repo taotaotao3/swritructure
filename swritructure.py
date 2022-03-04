@@ -14,6 +14,7 @@ import pyperclip as clp
 import csv
 from openpyxl.styles import Alignment    # Alignmentクラスをインポート
 from openpyxl.styles.borders import Border, Side # 罫線
+from pathlib import Path
 
 def get_structure(arg_1):
 
@@ -99,6 +100,7 @@ def get_structure(arg_1):
                                 
                     except:
                         continue
+
             return grep_result
 
         #grep_result = grep_method('./', "getTopURLStatus(")
@@ -110,6 +112,8 @@ def get_structure(arg_1):
 
         # print('Fill the from_list list with the py file names that come after from')
         def make_from_list(arg_file):
+            if not os.path.exists("./" + arg_file):
+                return [[]]
             f = open(arg_file, 'r', encoding='utf-8')
             datalist = f.readlines()
 
@@ -129,21 +133,26 @@ def get_structure(arg_1):
             datalist_from_import = datalist
             while(while_flag):
                 # Extract the related py file name described in import from from
+                # try:
+                #     datalist_from_import = datalist_from_import.replace('from ','fffff')
+                #     print(datalist_from_import)
+                #     pdb.set_trace()
+                #     datalist_from_import = datalist_from_import.replace(' import','iiiii')
+                # except:
+                #     print('from etc. None')
                 try:
-                    datalist_from_import = datalist_from_import.replace('from ','fffff')
-                    datalist_from_import = datalist_from_import.replace(' import','iiiii')
-                except:
-                    print('from etc. None')
-                try:
-                    datalist_from_file = (re.search(r'fffff(.*?)iiiii', datalist_from_import))[0].replace('fffff','').replace('iiiii','')
-                    # print(datalist_from_file)
-                    datalist_import_file = (re.search(r'iiiii(.*?)\\r', datalist_from_import))[0].replace('fffff','').replace('iiiii','').replace('\\r','')
+                    datalist_from_file = (re.search(r'from (.*?) import', datalist_from_import))[0].replace('from ','').replace(' import','')
+                    # print('datalist_from_file:', datalist_from_file)
+                    # pdb.set_trace()
+                    datalist_import_file = (re.search(r' import(.*?)\\r', datalist_from_import))[0].replace('from ','').replace(' import','').replace('\\r','')
+                    # print('datalist_import_file:', datalist_import_file)
+                    # pdb.set_trace()
                     # print(datalist_import_file)
                     from_list_ch.append(datalist_from_file)
                     from_list_ch.append(datalist_import_file)
                     from_list.append(from_list_ch)
                     from_list_ch = []
-                    datalist_from_import = datalist_from_import.replace('fffff' + datalist_from_file + 'iiiii', '')
+                    datalist_from_import = datalist_from_import.replace('from ' + datalist_from_file + ' import', '')
                 except:
                     print('-from- py file name -import- no longer exists')
                     while_flag = False
@@ -193,6 +202,8 @@ def get_structure(arg_1):
 
                 # When there is more than one import
                 import_list = from_file_list[int(num)][1].split(',')
+
+                print('aaa')
                 for m in import_list:
 
                     # After importing into one
@@ -210,15 +221,80 @@ def get_structure(arg_1):
                         file_last.write('    |   ' + str(import_method) + '()\r')
 
                         from_file_list_next = from_file_list_export(str(from_file_list[int(num)][0]) + '.py')
+                        # ファイルは存在してる？ ./   core.pdftoxml.py
+                        if not os.path.exists('./' + str(from_file_list[int(num)][0]) + '.py'):
 
+                            # no → .がいくつある？  reak.core.pdftoxml
+                            if (str(from_file_list[int(num)][0])).count('.') == 0:
+
+                                continue
+                            elif (str(from_file_list[int(num)][0])).count('.') == 1:
+
+                                # 1個あるとき　上の階層にその.左側フォルダがある？core
+                                if os.path.exists('../../' + (str(from_file_list[int(num)][0])).split('.')[0]):
+                                    # 上の階層にあった
+
+                                    print('../../' + (str(from_file_list[int(num)][0])).split('.')[0])
+                                    if not os.path.exists('../../' + (str(from_file_list[int(num)][0])).split('.')[0] + '/' +  (str(from_file_list[int(num)][0])).split('.')[1] + '.py'):
+                                        continue
+                                    else:
+                                        with open('../../' + (str(from_file_list[int(num)][0])).split('.')[0] + '/' +  (str(from_file_list[int(num)][0])).split('.')[1] + '.py', encoding='utf-8', errors='ignore') as f:
+
+                                            for line_ch in f:
+                                                # print(line_ch)
+                                                if from_file_list_next == [[]]:
+                                                    continue
+                                                for num_ffln, from_file_list_next_ch in enumerate(from_file_list_next):
+
+                                                    if from_file_list_next_ch[1].strip() in line_ch:
+                                                        method_name = from_file_list_next_ch[1].strip()
+                                                        print('from_file_list_next_ch[1].strip()■■■：', from_file_list_next_ch[1].strip())
+                                                        print('line_ch■■■:', line_ch)
+
+                                                        if re.search(rf'\b(?=\w)(.*?){method_name}(.*?)\((.*?)(?!\w)', str(line_ch)):
+                                                            # print('Bingo！！！！！！！！！！')
+
+                                                            # In addition. Extracted from commas (because there were things up to parentheses)
+                                                            method_text = re.search(rf'\b(?=\w)(.*?){method_name}(.*?)\((.*?)(?!\w)', str(line_ch))
+
+                                                            if int(num_ffln) + 1 == len(from_file_list_next):
+                                                                # When the next from file does not exist
+                                                                file_last.write('    |        ∟' + str(from_file_list_next_ch[0]) + '.py\r')
+                                                                file_last.write('                       |' + '\r')
+                                                                file_last.write('                       ' + str(method_name) + '()\r')
+                                                            else:
+                                                                # When there is the next from file
+                                                                file_last.write('    |        ∟' + str(from_file_list_next_ch[0]) + '.py\r')
+                                                                file_last.write('    |        |         |' + '\r')
+                                                                file_last.write('    |        |         ' + str(method_name) + '()\r')
+                                else:
+                                    # 上の階層になかった
+                                    continue
+                            else:
+                                # .が2個以上　今の仕様ではスキップ
+                                continue
                         # str(from_file_list[int(num)][0]) + '.py' 's str(import_method) + '()' 's Read to the next method
-                        with open('./' + str(from_file_list[int(num)][0]) + '.py', encoding='utf-8', errors='ignore') as f:
+                        print("'./' + str(from_file_list[int(num)][0]) + '.py':", './' + str(from_file_list[int(num)][0]) + '.py')
+
+                        file_name = str(from_file_list[int(num)][0]) + '.py'
+                        if file_name[:-3].count('.') == 1:
+                            #file_name = '../../' + file_name[:-3].split('.')[0] + '/' + file_name[:-3].split('.')[1] + '.py'
+                            path = Path(__file__).parent # swritructure.pyのあるディレクトリ
+                            path /= '../../' + file_name[:-3].split('.')[0]
+                            file_name = str(path.resolve()) + '\\' + file_name[:-3].split('.')[1] + '.py'
+
+                            #file_name = file_name[:-3].split('.')[1] + '.py'
+                            #aaa = sys.path.append(str(Path('__file__').resolve().parent.parent))
+                            
+                        with open(file_name, encoding='utf-8', errors='ignore') as f:
 
                             for line_ch in f:
                                 # print(line_ch)
                                 # If def comes at the beginning, it's coming to the next method, so skip it.
                                 if (line_ch.strip())[:3] == 'def':
-                                    continue                          
+                                    continue
+                                if from_file_list_next == [[]]:
+                                    continue
                                 for num_ffln, from_file_list_next_ch in enumerate(from_file_list_next):
                                     
                                     if from_file_list_next_ch[1].strip() in line_ch:
@@ -245,9 +321,11 @@ def get_structure(arg_1):
                                                 file_last.write('    |    |    |          |' + '\r')
                                                 file_last.write('    |    |    |          ' + str(method_name) + '()\r')
             else:
+
                 import_method = from_file_list[int(num)][1]
+
                 # After importing into one
-                import_method = m.strip() # Eliminate front and back blanks
+                import_method = import_method.strip() # Eliminate front and back blanks
 
                 if int(num) + 1 > len(from_file_list):
 
@@ -261,35 +339,91 @@ def get_structure(arg_1):
                     file_last.write('    |   ' + str(import_method) + '()\r')
 
                     from_file_list_next = from_file_list_export(str(from_file_list[int(num)][0]) + '.py')
+                    # ファイルは存在してる？ ./   core.pdftoxml.py
+                    print('|||||||||||||||||||||./' + str(from_file_list[int(num)][0]) + '.py')
+                    #print('bbbb:', os.path.exists('./' + str(from_file_list[int(num)][0]) + '.py'))
 
-                    with open('./' + str(from_file_list[int(num)][0]) + '.py', encoding='utf-8', errors='ignore') as f:
+                    if not os.path.exists('./' + str(from_file_list[int(num)][0]) + '.py'):
 
-                        for line_ch in f:
-                            # print(line_ch)
+                        # no → .がいくつある？  reak.core.pdftoxml
+                        if (str(from_file_list[int(num)][0])).count('.') == 0:
+                            continue
+                        elif (str(from_file_list[int(num)][0])).count('.') == 1:
+
+                            # 1個あるとき　上の階層にその.左側フォルダがある？core
+                            if os.path.exists('../../' + (str(from_file_list[int(num)][0])).split('.')[0]):
+                                # 上の階層にあった
+
+                                print('../../' + (str(from_file_list[int(num)][0])).split('.')[0])
+                                if not os.path.exists('../../' + (str(from_file_list[int(num)][0])).split('.')[0] + '/' +  (str(from_file_list[int(num)][0])).split('.')[1] + '.py'):
+                                    continue
+                                else:
+                                    with open('../../' + (str(from_file_list[int(num)][0])).split('.')[0] + '/' +  (str(from_file_list[int(num)][0])).split('.')[1] + '.py', encoding='utf-8', errors='ignore') as f:
+
+                                        for line_ch in f:
+                                            # print(line_ch)
+                                            if from_file_list_next == [[]]:
+                                                continue
+                                            for num_ffln, from_file_list_next_ch in enumerate(from_file_list_next):
+
+                                                if from_file_list_next_ch[1].strip() in line_ch:
+
+                                                    method_name = from_file_list_next_ch[1].strip()
+                                                    print('from_file_list_next_ch[1].strip()■■■：', from_file_list_next_ch[1].strip())
+                                                    print('line_ch■■■:', line_ch)
+
+                                                    if re.search(rf'\b(?=\w)(.*?){method_name}(.*?)\((.*?)(?!\w)', str(line_ch)):
+                                                        # print('Bingo！！！！！！！！！！')
+
+                                                        # In addition. Extracted from commas (because there were things up to parentheses)
+                                                        method_text = re.search(rf'\b(?=\w)(.*?){method_name}(.*?)\((.*?)(?!\w)', str(line_ch))
+
+                                                        if int(num_ffln) + 1 == len(from_file_list_next):
+                                                            # When the next from file does not exist
+                                                            file_last.write('    |        ∟' + str(from_file_list_next_ch[0]) + '.py\r')
+                                                            file_last.write('                       |' + '\r')
+                                                            file_last.write('                       ' + str(method_name) + '()\r')
+                                                        else:
+                                                            # When there is the next from file
+                                                            file_last.write('    |        ∟' + str(from_file_list_next_ch[0]) + '.py\r')
+                                                            file_last.write('    |        |         |' + '\r')
+                                                            file_last.write('    |        |         ' + str(method_name) + '()\r')
+                            else:
+                                # 上の階層になかった
+                                continue
+                        else:
+                            # .が2個以上　今の仕様ではスキップ
+                            continue
+
+                    else:
+                        with open('./' + str(from_file_list[int(num)][0]) + '.py', encoding='utf-8', errors='ignore') as f:
                             
-                            for num_ffln, from_file_list_next_ch in enumerate(from_file_list_next):
-                                
-                                if from_file_list_next_ch[1].strip() in line_ch:
-                                    method_name = from_file_list_next_ch[1].strip()
-                                    print('from_file_list_next_ch[1].strip()■■■：', from_file_list_next_ch[1].strip())
-                                    print('line_ch■■■:', line_ch)
+                            for line_ch in f:
+                                # print(line_ch)
 
-                                    if re.search(rf'\b(?=\w)(.*?){method_name}(.*?)\((.*?)(?!\w)', str(line_ch)):
-                                        # print('Bingo！！！！！！！！！！')
+                                for num_ffln, from_file_list_next_ch in enumerate(from_file_list_next):
 
-                                        # In addition. Extracted from commas (because there were things up to parentheses)
-                                        method_text = re.search(rf'\b(?=\w)(.*?){method_name}(.*?)\((.*?)(?!\w)', str(line_ch))
+                                    if from_file_list_next_ch[1].strip() in line_ch:
+                                        method_name = from_file_list_next_ch[1].strip()
+                                        print('from_file_list_next_ch[1].strip()■■■：', from_file_list_next_ch[1].strip())
+                                        print('line_ch■■■:', line_ch)
 
-                                        if int(num_ffln) + 1 == len(from_file_list_next):
-                                            # When the next from file does not exist
-                                            file_last.write('    |        ∟' + str(from_file_list_next_ch[0]) + '.py\r')
-                                            file_last.write('                       |' + '\r')
-                                            file_last.write('                       ' + str(method_name) + '()\r')
-                                        else:
-                                            # When there is the next from file
-                                            file_last.write('    |        ∟' + str(from_file_list_next_ch[0]) + '.py\r')
-                                            file_last.write('    |        |         |' + '\r')
-                                            file_last.write('    |        |         ' + str(method_name) + '()\r')
+                                        if re.search(rf'\b(?=\w)(.*?){method_name}(.*?)\((.*?)(?!\w)', str(line_ch)):
+                                            # print('Bingo！！！！！！！！！！')
+
+                                            # In addition. Extracted from commas (because there were things up to parentheses)
+                                            method_text = re.search(rf'\b(?=\w)(.*?){method_name}(.*?)\((.*?)(?!\w)', str(line_ch))
+
+                                            if int(num_ffln) + 1 == len(from_file_list_next):
+                                                # When the next from file does not exist
+                                                file_last.write('    |        ∟' + str(from_file_list_next_ch[0]) + '.py\r')
+                                                file_last.write('                       |' + '\r')
+                                                file_last.write('                       ' + str(method_name) + '()\r')
+                                            else:
+                                                # When there is the next from file
+                                                file_last.write('    |        ∟' + str(from_file_list_next_ch[0]) + '.py\r')
+                                                file_last.write('    |        |         |' + '\r')
+                                                file_last.write('    |        |         ' + str(method_name) + '()\r')
 
                 # When there is only one import
                 import_method = from_file_list[int(num)][1].strip() # Eliminate front and back blanks
@@ -306,7 +440,6 @@ def get_structure(arg_1):
     file_last.close()
     print('◆◆◆◆◆◆structure_bone.txt is output. Please confirm.◆◆◆◆◆◆')
 
-
     link_list = []
     with open('./structure_bone.txt', newline='') as test_file:
         str_data_list = list(csv.reader(test_file, delimiter='~'))
@@ -318,7 +451,7 @@ def get_structure(arg_1):
     first_method_name = []
     third_file_name = []
     second_method_name = []
-    
+
     # structure_bone.txtからファイル名とメソッド名の位置情報と何番目に出現かを抽出
     for dl_num, record in enumerate(str_data_list):
         if dl_num == 0 or dl_num == 1:
@@ -375,8 +508,24 @@ def get_structure(arg_1):
         # legth research
         data_list = []
         try:
+            print('file_name:', file_name)
+
+
+
+            if file_name[:-3].count('.') == 1:
+
+                #file_name = '../../' + file_name[:-3].split('.')[0] + '/' + file_name[:-3].split('.')[1] + '.py'
+                path = Path(__file__).parent # swritructure.pyのあるディレクトリ
+                path /= '../../' + file_name[:-3].split('.')[0]
+                file_name = str(path.resolve()) + '\\' + file_name[:-3].split('.')[1] + '.py'
+                #file_name = file_name[:-3].split('.')[1] + '.py'
+
+                #aaa = sys.path.append(str(Path('__file__').resolve().parent.parent))
+
             with open(file_name, newline='', encoding='utf-8') as test_file:
                 data_list = list(csv.reader(test_file, delimiter='~'))
+                print('data_list[0]:', data_list[0])
+
         except:
             print('third file open error')
             return wb, ori_data_list, start_r, max_char_len, start_c
@@ -394,7 +543,7 @@ def get_structure(arg_1):
         for record in data_list:
             if max_char_len < int(len(str(record)) / 10) + 3:
                 max_char_len = int(len(str(record)) / 10) + 3
-        
+
         # horizontalは調整いる
         # max_char_len = int(max_char_len / 10) - 1
         print('max_char_len:', max_char_len)
@@ -435,6 +584,7 @@ def get_structure(arg_1):
                             link_list.append(str(dl_num))
                 elif file_kind == 2:
                     # second fileのとき
+
                     if 'second method:'== all_file_name_in[0]:
                         method_arg = all_file_name_in[1] + '('
                         for method_arg in data_list_in[0]:
@@ -465,6 +615,7 @@ def get_structure(arg_1):
     # ブックを取得
     wb = px.Workbook()
     file_name = arg_1 # 初めだけ指定　arg_1
+
     # wb, data_list, max_char_len = main_file_paste(wb, data_list, file_name, 1, 1)
     start_c = 1
     max_rows_len = 1
@@ -481,10 +632,12 @@ def get_structure(arg_1):
     max_rows_len = 1
     flag_first_second = 0
     flag_first_third = 0
+
     for all_file_name_in in all_file_name:
         #first_method_count = 0
         if all_file_name_in[0] == 'second file:':
             # 1回目だけスタートの始点（横）の調整を行う
+
             if flag_first_second == 0:
                 flag_first_second += 1
                 start_c = main_last_char_len + 1
@@ -510,10 +663,6 @@ def get_structure(arg_1):
             # second file の列のコードを追加していく
             wb, data_list, max_rows_len, max_char_len, start_c = file_paste(link_list, wb, data_list, all_file_name_in[1], max_rows_len, max_char_len, start_c, file_kind)
 
-    
-    print('cccccc')
-    pdb.set_trace()
-
     # side = Side(style='thin')
     # border = Border(top=side, bottom=side, left=side, right=side)
     # font_title = Font(name='メイリオ', size=20)
@@ -537,5 +686,3 @@ if __name__ == "__main__":
     get_structure(arg_1)
     # except:
     #     print('Please write "python swritructure <your main filename>" or other reason')
-
-    
